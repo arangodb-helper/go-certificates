@@ -20,7 +20,7 @@
 // Author Ewout Prangsma
 //
 
-package main
+package cli
 
 import (
 	"fmt"
@@ -45,6 +45,7 @@ const (
 
 var (
 	logFatal  func(error, string)
+	showUsage func(cmd *cobra.Command, args []string)
 	cmdCreate = &cobra.Command{
 		Use:   "create",
 		Short: "Create certificates",
@@ -265,8 +266,10 @@ func (o *createKeystoreOptions) CreateCertificate(isClientAuth bool) {
 }
 
 // AddCommands adds all creations commands to the given root command.
-func AddCommands(cmd *cobra.Command, logFatalFunc func(error, string)) {
+func AddCommands(cmd *cobra.Command, logFatalFunc func(error, string), showUsageFunc func(cmd *cobra.Command, args []string)) {
 	logFatal = logFatalFunc
+	showUsage = showUsageFunc
+
 	cmd.AddCommand(cmdCreate)
 	cmdCreate.AddCommand(cmdCreateTLS)
 	cmdCreateTLS.AddCommand(cmdCreateTLSCA)
@@ -283,6 +286,11 @@ func AddCommands(cmd *cobra.Command, logFatalFunc func(error, string)) {
 	createOptions.tls.keystore.ConfigureFlags(cmdCreateTLSKeystore.Flags(), "tls-ca", "tls", defaultTLSValidFor)
 	createOptions.clientAuth.ca.ConfigureFlags(cmdCreateClientAuthCA.Flags(), "client-auth-ca", defaultClientAuthCAValidFor)
 	createOptions.clientAuth.keyFile.ConfigureFlags(cmdCreateClientAuthKeyFile.Flags(), "client-auth-ca", "client-auth", defaultClientAuthValidFor)
+}
+
+// Cobra run function using the usage of the given command
+func cmdShowUsage(cmd *cobra.Command, args []string) {
+	showUsage(cmd, args)
 }
 
 // cmdCreateTLSCARun creates a CA used to sign TLS certificates
@@ -339,4 +347,15 @@ func mustWriteFile(content string, filename string, mode os.FileMode, flagName s
 	if err := ioutil.WriteFile(filename, []byte(content), mode); err != nil {
 		logFatal(err, fmt.Sprintf("Failed to write %s", filename))
 	}
+}
+
+func mustReadFile(filename string, flagName string) string {
+	if filename == "" {
+		logFatal(nil, fmt.Sprintf("Missing filename for option --%s", flagName))
+	}
+	content, err := ioutil.ReadFile(filename)
+	if err != nil {
+		logFatal(err, fmt.Sprintf("Failed to read %s", filename))
+	}
+	return string(content)
 }
