@@ -206,8 +206,8 @@ func (o *createCertificateBaseOptions) CreateCertificate(isClientAuth bool) (str
 
 	// Create certificate
 	options := certificates.CreateCertificateOptions{
-		Hosts:          o.hosts,
-		EmailAddresses: o.emailAddresses,
+		Hosts:          removeEmptyStrings(o.hosts),
+		EmailAddresses: removeEmptyStrings(o.emailAddresses),
 		ValidFor:       o.validFor,
 		ECDSACurve:     o.ecdsaCurve,
 		IsClientAuth:   isClientAuth,
@@ -400,4 +400,15 @@ func mustReadFile(filename string, flagName string) string {
 		logFatal(err, fmt.Sprintf("Failed to read %s", filename))
 	}
 	return string(content)
+}
+
+// removeEmptyStrings returns the given slice without all empty entries removed.
+func removeEmptyStrings(slice []string) []string {
+	result := make([]string, 0, len(slice))
+	for _, x := range slice {
+		if x != "" {
+			result = append(result, x)
+		}
+	}
+	return result
 }
