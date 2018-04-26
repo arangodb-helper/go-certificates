@@ -187,13 +187,13 @@ type createCertificateBaseOptions struct {
 	ecdsaCurve     string
 }
 
-func (o *createCertificateBaseOptions) ConfigureFlags(f *pflag.FlagSet, defaultCAFName, defaultFName string, defaultValidFor time.Duration) {
+func (o *createCertificateBaseOptions) ConfigureFlags(f *pflag.FlagSet, defaultCAFName, defaultFName string, defaultValidFor time.Duration, defaultCurve string) {
 	f.StringVar(&o.caCertFile, "cacert", defaultCAFName+".crt", "File containing TLS CA certificate")
 	f.StringVar(&o.caKeyFile, "cakey", defaultCAFName+".key", "File containing TLS CA private key")
 	f.StringSliceVar(&o.hosts, "host", nil, "Host name to include in the certificate")
 	f.StringSliceVar(&o.emailAddresses, "email", nil, "Email address to include in the certificate")
 	f.DurationVar(&o.validFor, "validfor", defaultValidFor, "Lifetime of the certificate until expiration")
-	f.StringVar(&o.ecdsaCurve, "curve", "P521", "ECDSA curve used for private key")
+	f.StringVar(&o.ecdsaCurve, "curve", defaultCurve, "ECDSA curve used for private key")
 }
 
 // Create a certificate from given options.
@@ -228,8 +228,8 @@ type createKeyFileOptions struct {
 	keyFile string
 }
 
-func (o *createKeyFileOptions) ConfigureFlags(f *pflag.FlagSet, defaultCAFName, defaultFName string, defaultValidFor time.Duration) {
-	o.createCertificateBaseOptions.ConfigureFlags(f, defaultCAFName, defaultFName, defaultValidFor)
+func (o *createKeyFileOptions) ConfigureFlags(f *pflag.FlagSet, defaultCAFName, defaultFName string, defaultValidFor time.Duration, defaultCurve string) {
+	o.createCertificateBaseOptions.ConfigureFlags(f, defaultCAFName, defaultFName, defaultValidFor, defaultCurve)
 	f.StringVar(&o.keyFile, "keyfile", defaultFName+".keyfile", "Filename of keyfile to generate")
 }
 
@@ -250,8 +250,8 @@ type createCertificateOptions struct {
 	keyFile  string
 }
 
-func (o *createCertificateOptions) ConfigureFlags(f *pflag.FlagSet, defaultCAFName, defaultFName string, defaultValidFor time.Duration) {
-	o.createCertificateBaseOptions.ConfigureFlags(f, defaultCAFName, defaultFName, defaultValidFor)
+func (o *createCertificateOptions) ConfigureFlags(f *pflag.FlagSet, defaultCAFName, defaultFName string, defaultValidFor time.Duration, defaultCurve string) {
+	o.createCertificateBaseOptions.ConfigureFlags(f, defaultCAFName, defaultFName, defaultValidFor, defaultCurve)
 	f.StringVar(&o.certFile, "cert", defaultFName+".crt", "Filename of the generated certificate")
 	f.StringVar(&o.keyFile, "key", defaultFName+".key", "Filename of the generated private key")
 }
@@ -275,8 +275,8 @@ type createKeystoreOptions struct {
 	alias            string
 }
 
-func (o *createKeystoreOptions) ConfigureFlags(f *pflag.FlagSet, defaultCAFName, defaultFName string, defaultValidFor time.Duration) {
-	o.createCertificateBaseOptions.ConfigureFlags(f, defaultCAFName, defaultFName, defaultValidFor)
+func (o *createKeystoreOptions) ConfigureFlags(f *pflag.FlagSet, defaultCAFName, defaultFName string, defaultValidFor time.Duration, defaultCurve string) {
+	o.createCertificateBaseOptions.ConfigureFlags(f, defaultCAFName, defaultFName, defaultValidFor, defaultCurve)
 	f.StringVar(&o.keystoreFile, "keystore", defaultFName+".jks", "Filename of the generated keystore")
 	f.StringVar(&o.keystorePassword, "keystore-password", "", "Password of the generated keystore")
 	f.StringVar(&o.alias, "alias", "", "Aliases use to store the certificate under in the keystore")
