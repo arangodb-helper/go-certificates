@@ -43,6 +43,9 @@ const (
 	// Client authentication valid for defaults
 	defaultClientAuthValidFor   = time.Hour * 24 * 365 * 1  // 1 years
 	defaultClientAuthCAValidFor = time.Hour * 24 * 365 * 15 // 15 years
+	// TLS curve defaults
+	defaultTLSCurve        = "P265"
+	defaultClientAuthCurve = "P521"
 )
 
 var (
@@ -148,11 +151,11 @@ type createCAOptions struct {
 	ecdsaCurve string
 }
 
-func (o *createCAOptions) ConfigureFlags(f *pflag.FlagSet, defaultFName string, defaultValidFor time.Duration) {
+func (o *createCAOptions) ConfigureFlags(f *pflag.FlagSet, defaultFName string, defaultValidFor time.Duration, defaultCurve string) {
 	f.StringVar(&o.certFile, "cert", defaultFName+".crt", "Filename of the generated CA certificate")
 	f.StringVar(&o.keyFile, "key", defaultFName+".key", "Filename of the generated CA private key")
 	f.DurationVar(&o.validFor, "validfor", defaultValidFor, "Lifetime of the certificate until expiration")
-	f.StringVar(&o.ecdsaCurve, "curve", "P521", "ECDSA curve used for private key")
+	f.StringVar(&o.ecdsaCurve, "curve", defaultCurve, "ECDSA curve used for private key")
 }
 
 func (o *createCAOptions) CreateCA() {
@@ -317,12 +320,12 @@ func AddCommands(cmd *cobra.Command, logFatalFunc func(error, string), showUsage
 	cmdCreateClientAuth.AddCommand(cmdCreateClientAuthKeyFile)
 
 	createOptions.jwtsecret.ConfigureFlags(cmdCreateJWTSecret.Flags())
-	createOptions.tls.ca.ConfigureFlags(cmdCreateTLSCA.Flags(), "tls-ca", defaultTLSCAValidFor)
-	createOptions.tls.keyFile.ConfigureFlags(cmdCreateTLSKeyFile.Flags(), "tls-ca", "tls", defaultTLSValidFor)
-	createOptions.tls.certificate.ConfigureFlags(cmdCreateTLSCertificate.Flags(), "tls-ca", "tls", defaultTLSValidFor)
-	createOptions.tls.keystore.ConfigureFlags(cmdCreateTLSKeystore.Flags(), "tls-ca", "tls", defaultTLSValidFor)
-	createOptions.clientAuth.ca.ConfigureFlags(cmdCreateClientAuthCA.Flags(), "client-auth-ca", defaultClientAuthCAValidFor)
-	createOptions.clientAuth.keyFile.ConfigureFlags(cmdCreateClientAuthKeyFile.Flags(), "client-auth-ca", "client-auth", defaultClientAuthValidFor)
+	createOptions.tls.ca.ConfigureFlags(cmdCreateTLSCA.Flags(), "tls-ca", defaultTLSCAValidFor, defaultTLSCurve)
+	createOptions.tls.keyFile.ConfigureFlags(cmdCreateTLSKeyFile.Flags(), "tls-ca", "tls", defaultTLSValidFor,, defaultTLSCurve)
+	createOptions.tls.certificate.ConfigureFlags(cmdCreateTLSCertificate.Flags(), "tls-ca", "tls", defaultTLSValidFor,, defaultTLSCurve)
+	createOptions.tls.keystore.ConfigureFlags(cmdCreateTLSKeystore.Flags(), "tls-ca", "tls", defaultTLSValidFor,, defaultTLSCurve)
+	createOptions.clientAuth.ca.ConfigureFlags(cmdCreateClientAuthCA.Flags(), "client-auth-ca", defaultClientAuthCAValidFor, defaultClientAuthCurve)
+	createOptions.clientAuth.keyFile.ConfigureFlags(cmdCreateClientAuthKeyFile.Flags(), "client-auth-ca", "client-auth", defaultClientAuthValidFor, defaultClientAuthCurve)
 }
 
 // Cobra run function using the usage of the given command
