@@ -44,7 +44,7 @@ const (
 	defaultClientAuthValidFor   = time.Hour * 24 * 365 * 1  // 1 years
 	defaultClientAuthCAValidFor = time.Hour * 24 * 365 * 15 // 15 years
 	// TLS curve defaults
-	defaultTLSCurve        = "P265"
+	defaultTLSCurve        = "P256"
 	defaultClientAuthCurve = "P521"
 )
 
