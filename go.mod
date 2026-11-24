@@ -1,6 +1,6 @@
 module github.com/arangodb-helper/go-certificates
 
-go 1.26.11
+go 1.17
 
 require (
 	github.com/pavlo-v-chernykh/keystore-go/v4 v4.5.0
