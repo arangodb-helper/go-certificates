@@ -30,7 +30,7 @@ import (
 	"strings"
 	"time"
 
-	keystore "github.com/pavel-v-chernykh/keystore-go"
+	keystore "github.com/pavlo-v-chernykh/keystore-go/v4"
 
 	"github.com/pkg/errors"
 )
@@ -38,17 +38,21 @@ import (
 // CreateKeystore creates a java keystore containing the given certificate,
 // private key & ca certificate(s).
 func CreateKeystore(cert, key, caCert string, alias string, keystorePassword []byte) ([]byte, error) {
-	ks := make(keystore.KeyStore)
+	// Case-exact aliases match the names passed in. keystore-go v4 lowercases
+	// them unless asked. v4 is the fixed module for CVE-2026-76101.
+	ks := keystore.New(keystore.WithCaseExactAliases())
 
 	// Decode CA cert
 	ksCACerts, err := decodeCACertificates(caCert)
 	if err != nil {
 		return nil, maskAny(errors.Wrap(err, "Failed to decode CA certificates"))
 	}
-	for alias, ksCACert := range ksCACerts {
-		ks[alias] = &keystore.TrustedCertificateEntry{
-			Entry:       keystore.Entry{CreationDate: time.Now()},
-			Certificate: ksCACert,
+	for caAlias, ksCACert := range ksCACerts {
+		if err := ks.SetTrustedCertificateEntry(caAlias, keystore.TrustedCertificateEntry{
+			CreationTime: time.Now(),
+			Certificate:  ksCACert,
+		}); err != nil {
+			return nil, maskAny(errors.Wrap(err, "Failed to add CA certificate to keystore"))
 		}
 	}
 
@@ -67,15 +71,17 @@ func CreateKeystore(cert, key, caCert string, alias string, keystorePassword []b
 	if err != nil {
 		return nil, maskAny(errors.Wrap(err, "Failed to encode private key"))
 	}
-	ks[alias] = &keystore.PrivateKeyEntry{
-		Entry:     keystore.Entry{CreationDate: time.Now()},
-		PrivKey:   encPK,
-		CertChain: ksCerts,
+	if err := ks.SetPrivateKeyEntry(alias, keystore.PrivateKeyEntry{
+		CreationTime:     time.Now(),
+		PrivateKey:       encPK,
+		CertificateChain: ksCerts,
+	}, keystorePassword); err != nil {
+		return nil, maskAny(errors.Wrap(err, "Failed to add private key to keystore"))
 	}
 
 	// Encode keystore
 	buf := &bytes.Buffer{}
-	if err := keystore.Encode(buf, ks, keystorePassword); err != nil {
+	if err := ks.Store(buf, keystorePassword); err != nil {
 		return nil, maskAny(errors.Wrap(err, "Failed to encode keystore"))
 	}
 
